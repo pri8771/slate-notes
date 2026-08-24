@@ -1,0 +1,41 @@
+# XcodeGen spec — edit this, then `xcodegen generate`. Never hand-edit the .xcodeproj.
+name: App
+options:
+  bundleIdPrefix: com.pri8771
+  deploymentTarget:
+    iOS: "17.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    GENERATE_INFOPLIST_FILE: YES
+    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: 0.1.0
+targets:
+  App:
+    type: application
+    platform: iOS
+    sources: [App]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.pri8771.slate
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_CFBundleDisplayName: "Slate"
+  AppTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests/Unit]
+    dependencies:
+      - target: App
+  AppUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [Tests/UI]
+    dependencies:
+      - target: App
+schemes:
+  App:
+    build:
+      targets:
+        App: all
+    test:
+      targets: [AppTests, AppUITests]

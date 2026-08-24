@@ -1,0 +1,14 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Notes list", "x": 0, "y": 0, "w": 390, "h": 844 },
+    { "file": "Editor.dc.html", "title": "Editor", "x": 480, "y": 0, "w": 390, "h": 844 },
+    { "file": "Search.dc.html", "title": "Search", "x": 960, "y": 0, "w": 390, "h": 844 },
+    { "file": "Empty.dc.html", "title": "First launch", "x": 1440, "y": 0, "w": 390, "h": 844 },
+    { "file": "DarkList.dc.html", "title": "Notes list — dark", "x": 0, "y": 990, "w": 390, "h": 844 },
+    { "file": "DarkEditor.dc.html", "title": "Editor — dark", "x": 480, "y": 990, "w": 390, "h": 844 }
+  ],
+  "annotations": [
+    { "id": "direction", "x": 980, "y": 1050, "w": 300, "text": "Direction: quiet paper minimalism.\nWarm off-white ground (#F7F6F3), near-black ink, one slate-blue accent (#4E5D78) reserved for actions. System SF type, hairline separators, no chrome beyond the pencil button.\nEverything on-device; the empty state says so." }
+  ],
+  "launch": { "view": "canvas" }
+}
