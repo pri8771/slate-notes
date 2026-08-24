@@ -18,3 +18,4 @@ Roles: builder · reviewer · qa · owner.
 | S-009 | planned | reviewer | Full review pass against CLAUDE.md + PRODUCT.md; findings become new rows. |
 | S-010 | planned | builder | App icon (slate square, minimal glyph), display name, privacy manifest (no tracking, no network). |
 | S-011 | blocked (owner: ASC secrets) | owner | Add ASC API key secrets; then trigger release.yml → first TestFlight build. |
+| S-012 | planned (v1.1, after S-011 ships) | owner+agent | Enable Supabase kit: owner creates the Slate Supabase project; builder activates SPM/config, writes notes schema + RLS, implements Sign in with Apple + local-first sync + account deletion/export. |

@@ -67,6 +67,24 @@ You may *request* gate runs; you may never *declare* a gate passed.
 `unknown` never passes. Release to TestFlight happens only through
 `.github/workflows/release.yml`, triggered by the owner.
 
+## Backend (when the app needs one)
+
+Supabase is the factory's standard backend — accounts, sync, shared data,
+storage. Rules:
+
+- Default to on-device (SwiftData) until PRODUCT.md names a feature that
+  needs a backend; then use Supabase via the official supabase-swift SDK.
+  One Supabase project per app (owner creates it; URL + anon key are
+  config, not secrets — but service-role keys NEVER appear in the repo).
+- Local-first always: the on-device store stays the source of truth
+  offline; Supabase syncs it. No feature may break when the network is gone.
+- Row Level Security ON for every table, policies written with the schema.
+  Auth = Sign in with Apple through Supabase Auth.
+- Schema lives in the repo as `Supabase/schema.sql` (+ migration files) —
+  the database is code-reviewed like everything else.
+- Account deletion and data export must ship in the same version that
+  introduces accounts (App Store requirement and house rule).
+
 ## Owner-only actions
 
 Signing/App Store Connect secrets, content/legal sign-off, device-gate

@@ -1,0 +1,18 @@
+-- Slate schema. Source of truth for the app's Supabase project.
+-- House rules: every table has RLS enabled and its policies defined here.
+-- Applied via Supabase SQL editor/CLI; changes after go-live land in
+-- migrations/, never by editing live tables silently.
+
+-- Example shape (delete when writing the real schema):
+--
+-- create table example_items (
+--   id uuid primary key default gen_random_uuid(),
+--   owner_id uuid not null references auth.users (id) on delete cascade,
+--   payload text not null,
+--   updated_at timestamptz not null default now()
+-- );
+-- alter table example_items enable row level security;
+-- create policy "owners read own" on example_items
+--   for select using (auth.uid() = owner_id);
+-- create policy "owners write own" on example_items
+--   for all using (auth.uid() = owner_id) with check (auth.uid() = owner_id);

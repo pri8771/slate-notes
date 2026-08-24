@@ -38,6 +38,12 @@ v1 is free. A later one-time "Slate Pro" unlock (~$2.99) may cover: note
 locking, plain-text/markdown export, app icon and typeface choices.
 Revenue is not the pilot's goal; proving the idea→TestFlight loop is.
 
+## v1.1 (first post-TestFlight release)
+
+Enable the factory's Supabase kit: account via Sign in with Apple + note
+sync (local-first — SwiftData stays the offline source of truth), with
+account deletion and export in the same release.
+
 ## Non-goals (v1)
 
 Folders/tags, sync/iCloud, rich text and attachments, collaboration,
