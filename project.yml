@@ -1,5 +1,12 @@
 # XcodeGen spec — edit this, then `xcodegen generate`. Never hand-edit the .xcodeproj.
 name: App
+# Supabase kit (see Supabase/README.md). Dormant until the app needs a
+# backend; enabling is one queue unit — uncomment this block and the
+# SUPABASE_* Info.plist keys below, then `xcodegen generate`.
+# packages:
+#   Supabase:
+#     url: https://github.com/supabase/supabase-swift
+#     from: 2.0.0
 options:
   bundleIdPrefix: com.pri8771
   deploymentTarget:
@@ -14,12 +21,24 @@ targets:
   App:
     type: application
     platform: iOS
-    sources: [App]
+    sources:
+      - App
+      - path: Resources/PrivacyInfo.xcprivacy
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.pri8771.slate
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_CFBundleDisplayName: "Slate"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        # Supabase kit (public config, not secrets — service keys never here):
+        # INFOPLIST_KEY_SUPABASE_URL: "https://<project>.supabase.co"
+        # INFOPLIST_KEY_SUPABASE_ANON_KEY: "<anon key>"
+    # dependencies:
+    #   - package: Supabase
+    #     product: Supabase
   AppTests:
     type: bundle.unit-test
     platform: iOS

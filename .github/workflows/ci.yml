@@ -35,7 +35,7 @@ jobs:
           xcodebuild build \
             -project App.xcodeproj -scheme App \
             -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.device }}" \
-            CODE_SIGNING_ALLOWED=NO | tail -50
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee build.log | tail -50
 
       - name: Test
         run: |
@@ -44,7 +44,21 @@ jobs:
             -project App.xcodeproj -scheme App \
             -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.device }}" \
             CODE_SIGNING_ALLOWED=NO \
-            -resultBundlePath TestResults.xcresult | tail -80
+            -resultBundlePath TestResults.xcresult 2>&1 | tee -a build.log | tail -80
+
+      - name: Surface the actual errors
+        if: failure()
+        run: |
+          echo "--- error lines ---"
+          grep -n -E "error:|Testing failed|failed with exit code|XCTAssert" build.log | head -60 || true
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log-${{ github.sha }}
+          path: build.log
+          retention-days: 14
 
       - name: Upload test results
         if: always()
