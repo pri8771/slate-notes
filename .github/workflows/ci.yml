@@ -50,7 +50,12 @@ jobs:
         if: failure()
         run: |
           echo "--- error lines ---"
-          grep -n -E "error:|Testing failed|failed with exit code|XCTAssert" build.log | head -60 || true
+          # Match compiler and XCTest failures; CoreData logs its own noisy
+          # "CoreData: error:" lines that would otherwise fill this window.
+          grep -n -E "(^|[^a-zA-Z])error: |Testing failed|TEST FAILED|failed with exit code|XCTAssert.*failed|Test Case .* failed" build.log \
+            | grep -v "CoreData: error:" | head -60 || true
+          echo "--- test case summary ---"
+          grep -n -E "Test Case .*(passed|failed)" build.log | tail -40 || true
 
       - name: Upload build log
         if: always()

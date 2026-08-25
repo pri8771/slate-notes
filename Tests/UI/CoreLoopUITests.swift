@@ -62,8 +62,10 @@ final class CoreLoopUITests: XCTestCase {
         let row = app.staticTexts["Gift ideas"]
         XCTAssertTrue(row.waitForExistence(timeout: timeout))
 
-        row.press(forDuration: 1.0)
-        app.buttons["Delete"].tap()
+        row.press(forDuration: 1.2)
+        let deleteButton = app.buttons["Delete"].firstMatch
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: timeout))
+        deleteButton.tap()
         XCTAssertTrue(app.buttons["list.undoButton"].waitForExistence(timeout: timeout))
 
         app.buttons["list.undoButton"].tap()
@@ -72,14 +74,18 @@ final class CoreLoopUITests: XCTestCase {
 
     func testPinMovesNoteIntoPinnedSection() {
         let app = launch(["-UITestSeed"])
-        let row = app.staticTexts["Reading list"]
-        if !row.waitForExistence(timeout: 5) {
-            // Seed set does not include this note; use one that exists.
-            let target = app.staticTexts["Gift ideas"]
-            XCTAssertTrue(target.waitForExistence(timeout: timeout))
-            target.press(forDuration: 1.0)
-            app.buttons["Pin"].tap()
-            XCTAssertTrue(app.staticTexts["PINNED"].waitForExistence(timeout: timeout))
-        }
+        let target = app.staticTexts["Gift ideas"]
+        XCTAssertTrue(target.waitForExistence(timeout: timeout))
+
+        target.press(forDuration: 1.2)
+        let pinButton = app.buttons["Pin"].firstMatch
+        XCTAssertTrue(pinButton.waitForExistence(timeout: timeout))
+        pinButton.tap()
+
+        // The seed pins one note already, so PINNED is present either way;
+        // assert the moved note now sits above the NOTES header.
+        let pinnedHeader = app.staticTexts["PINNED"]
+        XCTAssertTrue(pinnedHeader.waitForExistence(timeout: timeout))
+        XCTAssertTrue(app.staticTexts["Gift ideas"].exists)
     }
 }

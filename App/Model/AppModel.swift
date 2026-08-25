@@ -25,12 +25,20 @@ final class AppModel {
         if case .ready = phase { return }
         phase = .loading
         do {
-            let container = try ModelContainer(for: Note.self)
+            let container = try ModelContainer(for: Note.self, configurations: Self.configuration())
             applyTestArguments(arguments, in: container)
             phase = .ready(container)
         } catch {
             phase = .failed("Slate couldn't open your notes.")
         }
+    }
+
+    /// Documents always exists in the app sandbox; Application Support (the
+    /// SwiftData default) may not, and creating it can be denied on a fresh
+    /// simulator container.
+    static func configuration() -> ModelConfiguration {
+        let url = URL.documentsDirectory.appending(path: "Slate.store")
+        return ModelConfiguration(url: url)
     }
 
     func retry() {
