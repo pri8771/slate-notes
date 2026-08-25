@@ -63,7 +63,7 @@ final class CoreLoopUITests: XCTestCase {
         XCTAssertTrue(row.waitForExistence(timeout: timeout))
 
         row.press(forDuration: 1.2)
-        let deleteButton = app.buttons["Delete"].firstMatch
+        let deleteButton = app.buttons["row.delete"].firstMatch
         XCTAssertTrue(deleteButton.waitForExistence(timeout: timeout))
         deleteButton.tap()
         XCTAssertTrue(app.buttons["list.undoButton"].waitForExistence(timeout: timeout))
@@ -78,7 +78,7 @@ final class CoreLoopUITests: XCTestCase {
         XCTAssertTrue(target.waitForExistence(timeout: timeout))
 
         target.press(forDuration: 1.2)
-        let pinButton = app.buttons["Pin"].firstMatch
+        let pinButton = app.buttons["row.pin"].firstMatch
         XCTAssertTrue(pinButton.waitForExistence(timeout: timeout))
         pinButton.tap()
 

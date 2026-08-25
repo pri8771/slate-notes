@@ -10,18 +10,18 @@ enum NoteDate {
         relativeTo now: Date = Date(),
         calendar: Calendar = .current
     ) -> String {
-        if calendar.isDateInToday(date) {
-            return timeFormatter.string(from: date)
+        let days = calendar.dateComponents(
+            [.day],
+            from: calendar.startOfDay(for: date),
+            to: calendar.startOfDay(for: now)
+        ).day ?? 0
+
+        switch days {
+        case 0: return timeFormatter.string(from: date)
+        case 1: return "Yesterday"
+        case 2..<7: return weekdayFormatter.string(from: date)
+        default: return shortDateFormatter.string(from: date)
         }
-        if calendar.isDateInYesterday(date) {
-            return "Yesterday"
-        }
-        if let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: date),
-                                              to: calendar.startOfDay(for: now)).day,
-           days > 0, days < 7 {
-            return weekdayFormatter.string(from: date)
-        }
-        return shortDateFormatter.string(from: date)
     }
 
     /// "August 24, 2026 · 9:41 AM"

@@ -181,7 +181,9 @@ struct NotesListView: View {
                     Button(note.isPinned ? "Unpin" : "Pin") {
                         store.setPinned(note, !note.isPinned)
                     }
+                    .accessibilityIdentifier("row.pin")
                     Button("Delete", role: .destructive) { delete(note) }
+                        .accessibilityIdentifier("row.delete")
                 }
         }
     }
