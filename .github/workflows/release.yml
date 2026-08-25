@@ -3,16 +3,15 @@ name: Release to TestFlight
 # Owner-triggered only. Requires these repository secrets (one-time setup):
 #   ASC_KEY_ID       App Store Connect API key ID
 #   ASC_ISSUER_ID    App Store Connect issuer ID
-#   ASC_KEY_P8       Contents of the .p8 API key file
+#   ASC_KEY_P8       Contents of the .p8 API key file (raw PEM or base64 — both accepted)
 # Signing uses Xcode automatic signing ("-allowProvisioningUpdates") with the
-# ASC API key; no certificates need to be checked in.
+# ASC API key; no certificates need to be checked in. The App Store Connect
+# app record (name, bundle id, SKU) must already exist — this workflow
+# registers the bundle id/profile via provisioning updates but cannot create
+# the app record itself.
 
 on:
-  workflow_dispatch:
-    inputs:
-      build_number:
-        description: Build number for this TestFlight upload
-        required: true
+  workflow_dispatch: {}
 
 jobs:
   release:
@@ -27,17 +26,50 @@ jobs:
       - name: Generate project
         run: xcodegen generate
 
-      - name: Write ASC API key
+      # Build number is the GitHub run number: monotonically increasing,
+      # never reused even on a re-run, so it can't collide with a build
+      # number App Store Connect has already consumed (a rejected upload is
+      # not recoverable without bumping the number).
+      - name: Compute build number
+        id: build_number
+        run: echo "value=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+
+      # The key that silently killed automation before: a missing or
+      # malformed .p8 fails here, in plain language, instead of surfacing as
+      # an opaque signing error three steps later.
+      - name: Write and verify ASC API key
         env:
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
         run: |
+          set -eu
+          if [ -z "$ASC_KEY_P8" ] || [ -z "$ASC_KEY_ID" ]; then
+            echo "::error::ASC_KEY_P8 or ASC_KEY_ID secret is empty or unset. Add both (and ASC_ISSUER_ID) under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
           mkdir -p ~/private_keys
-          printf '%s' "$ASC_KEY_P8" > ~/private_keys/AuthKey_${ASC_KEY_ID}.p8
+          KEY_PATH=~/private_keys/AuthKey_${ASC_KEY_ID}.p8
+          if printf '%s' "$ASC_KEY_P8" | grep -q "BEGIN PRIVATE KEY"; then
+            printf '%s' "$ASC_KEY_P8" > "$KEY_PATH"
+          else
+            # Accept a base64-encoded key too, in case it was stored that way.
+            printf '%s' "$ASC_KEY_P8" | base64 --decode > "$KEY_PATH" 2>/dev/null || {
+              echo "::error::ASC_KEY_P8 is neither a raw PEM (missing 'BEGIN PRIVATE KEY') nor valid base64. Re-download the .p8 from App Store Connect and paste its exact contents."
+              exit 1
+            }
+          fi
+          if ! grep -q "BEGIN PRIVATE KEY" "$KEY_PATH"; then
+            echo "::error::Decoded ASC_KEY_P8 still doesn't look like a private key (no 'BEGIN PRIVATE KEY' line). Check the secret's contents."
+            exit 1
+          fi
+          echo "ASC key written and looks like a valid PEM."
 
       - name: Archive
+        env:
+          BUILD_NUMBER: ${{ steps.build_number.outputs.value }}
         run: |
           set -o pipefail
+          echo "Team: 796XH483R4  Bundle: com.priyansh.slate  Build: $BUILD_NUMBER"
           xcodebuild archive \
             -project App.xcodeproj -scheme App \
             -destination 'generic/platform=iOS' \
@@ -46,7 +78,12 @@ jobs:
             -authenticationKeyID "${{ secrets.ASC_KEY_ID }}" \
             -authenticationKeyIssuerID "${{ secrets.ASC_ISSUER_ID }}" \
             -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 \
-            CURRENT_PROJECT_VERSION=${{ inputs.build_number }} | tail -50
+            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+            2>&1 | tee archive.log | tail -80
+
+      - name: Surface archive errors
+        if: failure()
+        run: grep -n -E "(^|[^a-zA-Z])error: |BUILD FAILED|Signing for .* requires" archive.log | head -60 || true
 
       - name: Export and upload
         run: |
@@ -65,4 +102,21 @@ jobs:
             -allowProvisioningUpdates \
             -authenticationKeyID "${{ secrets.ASC_KEY_ID }}" \
             -authenticationKeyIssuerID "${{ secrets.ASC_ISSUER_ID }}" \
-            -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 | tail -30
+            -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 \
+            2>&1 | tee export.log | tail -50
+
+      - name: Surface export/upload errors
+        if: failure()
+        run: |
+          grep -n -E "(^|[^a-zA-Z])error: |No suitable application records|does not match any existing|Unable to authenticate" export.log | head -60 || true
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-logs-${{ github.run_number }}
+          path: |
+            archive.log
+            export.log
+          retention-days: 30
+          if-no-files-found: ignore
