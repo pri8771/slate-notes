@@ -28,6 +28,4 @@ final class Autosave {
         task = nil
         perform()
     }
-
-    deinit { task?.cancel() }
 }

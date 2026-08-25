@@ -2,30 +2,28 @@ import XCTest
 import SwiftData
 @testable import App
 
-@MainActor
 final class NotesStoreTests: XCTestCase {
-    private var container: ModelContainer!
-    private var store: NotesStore!
 
-    override func setUpWithError() throws {
+    /// Fresh in-memory store per test; no shared state between cases.
+    @MainActor
+    private func makeStore() throws -> NotesStore {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        container = try ModelContainer(for: Note.self, configurations: config)
-        store = NotesStore(context: ModelContext(container))
+        let container = try ModelContainer(for: Note.self, configurations: config)
+        return NotesStore(context: ModelContext(container))
     }
 
-    override func tearDownWithError() throws {
-        store = nil
-        container = nil
-    }
-
+    @MainActor
     func testCreateThenFetch() throws {
+        let store = try makeStore()
         store.create(text: "Trail mix")
         let notes = try store.allNotes()
         XCTAssertEqual(notes.count, 1)
         XCTAssertEqual(notes.first?.displayTitle, "Trail mix")
     }
 
+    @MainActor
     func testUpdateBumpsTimestamp() throws {
+        let store = try makeStore()
         let note = store.create(text: "First", now: Date(timeIntervalSince1970: 0))
         let before = note.updatedAt
         store.update(note, text: "Second", now: Date(timeIntervalSince1970: 100))
@@ -33,14 +31,18 @@ final class NotesStoreTests: XCTestCase {
         XCTAssertEqual(note.text, "Second")
     }
 
-    func testUnchangedUpdateIsANoOp() {
+    @MainActor
+    func testUnchangedUpdateIsANoOp() throws {
+        let store = try makeStore()
         let note = store.create(text: "Same", now: Date(timeIntervalSince1970: 0))
         let before = note.updatedAt
         store.update(note, text: "Same", now: Date(timeIntervalSince1970: 500))
         XCTAssertEqual(note.updatedAt, before)
     }
 
-    func testPinAndUnpin() {
+    @MainActor
+    func testPinAndUnpin() throws {
+        let store = try makeStore()
         let note = store.create(text: "Pin me")
         store.setPinned(note, true)
         XCTAssertTrue(note.isPinned)
@@ -48,7 +50,9 @@ final class NotesStoreTests: XCTestCase {
         XCTAssertFalse(note.isPinned)
     }
 
+    @MainActor
     func testDeleteThenRestoreKeepsIdentity() throws {
+        let store = try makeStore()
         let note = store.create(text: "Delete me")
         store.setPinned(note, true)
         let id = note.id
@@ -65,7 +69,9 @@ final class NotesStoreTests: XCTestCase {
         XCTAssertTrue(restored.isPinned)
     }
 
+    @MainActor
     func testDiscardIfEmptyDropsBlankNotesOnly() throws {
+        let store = try makeStore()
         let blank = store.create(text: "   \n ")
         let real = store.create(text: "Real")
         XCTAssertTrue(store.discardIfEmpty(blank))
@@ -73,7 +79,9 @@ final class NotesStoreTests: XCTestCase {
         XCTAssertEqual(try store.allNotes().count, 1)
     }
 
+    @MainActor
     func testNotesSortNewestFirst() throws {
+        let store = try makeStore()
         store.create(text: "Older", now: Date(timeIntervalSince1970: 10))
         store.create(text: "Newer", now: Date(timeIntervalSince1970: 200))
         XCTAssertEqual(try store.allNotes().first?.displayTitle, "Newer")
@@ -81,6 +89,7 @@ final class NotesStoreTests: XCTestCase {
 
     /// The persistence half of the functionality rule: write, drop the
     /// container, rebuild from the same file, and the note is still there.
+    @MainActor
     func testNotesSurviveContainerReload() throws {
         let url = URL.temporaryDirectory.appending(path: "slate-test-\(UUID().uuidString).store")
         defer { try? FileManager.default.removeItem(at: url) }

@@ -1,9 +1,9 @@
 import XCTest
 @testable import App
 
-@MainActor
 final class AutosaveTests: XCTestCase {
 
+    @MainActor
     func testRapidSchedulesFireOnce() async throws {
         var fires = 0
         let autosave = Autosave(interval: .milliseconds(50)) { fires += 1 }
@@ -14,6 +14,7 @@ final class AutosaveTests: XCTestCase {
         XCTAssertEqual(fires, 1)
     }
 
+    @MainActor
     func testFlushFiresImmediatelyAndCancelsPending() async throws {
         var fires = 0
         let autosave = Autosave(interval: .milliseconds(200)) { fires += 1 }
