@@ -211,7 +211,7 @@ struct NotesListView: View {
         pendingUndo = snapshot
         undoTask?.cancel()
         undoTask = Task {
-            try? await Task.sleep(for: .seconds(4))
+            try? await Task.sleep(for: .seconds(6))
             guard !Task.isCancelled else { return }
             pendingUndo = nil
         }

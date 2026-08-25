@@ -17,6 +17,7 @@ struct UndoToastView: View {
         .frame(minHeight: DS.Metric.minTapTarget)
         .background(DS.Color.surface, in: Capsule())
         .shadow(color: DS.Shadow.fabColor, radius: DS.Shadow.fabRadius, y: DS.Shadow.fabY)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("list.undoToast")
     }
 }

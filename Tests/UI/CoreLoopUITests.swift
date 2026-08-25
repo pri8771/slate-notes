@@ -64,12 +64,23 @@ final class CoreLoopUITests: XCTestCase {
 
         row.press(forDuration: 1.2)
         let deleteButton = app.buttons["row.delete"].firstMatch
-        XCTAssertTrue(deleteButton.waitForExistence(timeout: timeout))
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: timeout),
+                      "step 1: the context menu's Delete action was not found")
         deleteButton.tap()
-        XCTAssertTrue(app.buttons["list.undoButton"].waitForExistence(timeout: timeout))
 
-        app.buttons["list.undoButton"].tap()
-        XCTAssertTrue(app.staticTexts["Gift ideas"].waitForExistence(timeout: timeout))
+        // Deletion itself must take effect before undo means anything.
+        let removed = NSPredicate(format: "exists == false")
+        expectation(for: removed, evaluatedWith: app.staticTexts["Gift ideas"])
+        waitForExpectations(timeout: timeout) { error in
+            XCTAssertNil(error, "step 2: the note was still listed after Delete")
+        }
+
+        let undo = app.buttons["list.undoButton"]
+        XCTAssertTrue(undo.waitForExistence(timeout: timeout),
+                      "step 3: the undo toast never appeared")
+        undo.tap()
+        XCTAssertTrue(app.staticTexts["Gift ideas"].waitForExistence(timeout: timeout),
+                      "step 4: undo did not restore the note")
     }
 
     func testPinMovesNoteIntoPinnedSection() {
