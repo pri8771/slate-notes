@@ -83,7 +83,8 @@ jobs:
 
       - name: Surface archive errors
         if: failure()
-        run: grep -n -E "(^|[^a-zA-Z])error: |BUILD FAILED|Signing for .* requires" archive.log | head -60 || true
+        run: |
+          grep -n -E "(^|[^a-zA-Z])error: |BUILD FAILED|Signing for .* requires" archive.log | head -60 || true
 
       - name: Export and upload
         run: |
